@@ -1,7 +1,5 @@
-from datasets import Dataset
+from datasets import load_dataset, Dataset
 from prompt import PromptChatOpenAIFormatter, PromptDefaultFormatter
-import abc
-import json
 import pandas as pd
 
 class DatasetManager:
@@ -45,9 +43,5 @@ class DatasetManager:
         return Dataset.from_pandas(csv_data)
 
     def _create_dataset_from_json(self):
-        json_data = []
-        with open(self.dataset_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                json_data.append(json.loads(line))
-
-        return Dataset.from_list(json_data)
+        datasets = load_dataset('json', data_files=self.dataset_path, split='train')
+        return datasets

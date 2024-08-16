@@ -48,7 +48,6 @@ class ModelTrainer:
             dataset_text_field='text',
             peft_config=self.lora_config,
             args=self.training_args,
-            lora_config=self.lora_config,
             max_seq_length=512
         )
 

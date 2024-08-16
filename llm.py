@@ -12,7 +12,11 @@ class CausalLM:
 
     def __init__(self, repo_id: str, quantization_config: str | BitsAndBytesConfig = 'default', attn_implementation = 'default') -> None:
         self.repo_id = repo_id
-        self.attn_implementation = attn_implementation
+
+        if attn_implementation == 'default':
+            self.attn_implementation = 'eager'
+        else:
+            self.attn_implementation = attn_implementation
 
         if quantization_config == 'default':
             self.quantization_config = self._create_default_quantization_config()
@@ -21,14 +25,25 @@ class CausalLM:
 
     @property
     def model(self):
-        if self.attn_implementation == 'default':
-            self.attn_implementation = 'eager'
-
         return self._initialize_model(self.attn_implementation)
 
     @property
     def linear_layer_names(self):
         return self._find_all_linear_names()
+
+    def config_quantization(
+        self,
+        load_in_4bit: bool = True,
+        bnb_4bit_quant_type: str = 'nf4',
+        bnb_4bit_use_double_quant: bool = True,
+        bnb_4bit_compute_dtype: torch.dtype = torch.float16
+    ):
+        self.quantization_config = BitsAndBytesConfig(
+            load_in_4bit=load_in_4bit,
+            bnb_4bit_quant_type=bnb_4bit_quant_type,
+            bnb_4bit_use_double_quant=bnb_4bit_use_double_quant,
+            bnb_4bit_compute_dtype=bnb_4bit_compute_dtype
+        )
 
     def _create_default_quantization_config(self):
         return BitsAndBytesConfig(
