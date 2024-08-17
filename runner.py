@@ -1,5 +1,6 @@
 from llm import CausalLM
 from tokenizer import Tokenizer
+from logging_formatter import logger
 import torch
 
 
@@ -36,4 +37,5 @@ class ModelRunner:
         ]
 
         response = self.tokenizer.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        logger.info("Generated response: %s", response)
         return response
