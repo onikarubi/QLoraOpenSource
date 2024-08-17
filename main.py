@@ -14,7 +14,7 @@ if __name__ == '__main__':
     use_cuda = torch.cuda.is_available()
     torch.cuda.empty_cache()
     device = torch.device("cuda" if use_cuda else "cpu")
-    adapter_path = './saved_model'
+    adapter_path = './ずんだもん_Adapter'
     repo_id = 'google/gemma-2-2b-it'
 
     runner = ModelRunner(repo_id, adapter_path)
