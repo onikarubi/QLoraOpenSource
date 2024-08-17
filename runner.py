@@ -25,15 +25,13 @@ class ModelRunner:
             prompt,
             add_special_tokens=False,
             return_tensors='pt'
-        )
+        ).to('cuda')
 
         with torch.no_grad():
             output_ids = self.llm.model.generate(
-                token_ids.to('cuda'),
+                token_ids.input_ids,
                 max_new_tokens=600,
-                do_sample=True,
-                temperature=0.6,
-                top_p=0.9,
+                attention_mask=token_ids.attention_mask
             )
 
         output = self.tokenizer.tokenizer.decode(
