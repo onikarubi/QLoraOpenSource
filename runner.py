@@ -21,23 +21,10 @@ class ModelRunner:
             add_generation_prompt=True
         )
 
-        token_ids = self.tokenizer.tokenizer.encode(
-            prompt,
-            add_special_tokens=False,
-            return_tensors='pt'
-        ).to('cuda')
+        model_inputs = self.tokenizer.tokenizer([prompt], return_tensors="pt").to("cuda")
+        generated_ids = [
+        output_ids[len(input_ids):] for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
+    ]
 
-        with torch.no_grad():
-            output_ids = self.llm.model.generate(
-                token_ids,
-                max_new_tokens=600,
-                attention_mask=token_ids.attention_mask
-            )
-
-        output = self.tokenizer.tokenizer.decode(
-            output_ids.tolist()[0][token_ids.size(1):],
-            skip_special_tokens=True
-        )
-        print(output)
-
-        return output
+        print(generated_ids)
+        return generated_ids
