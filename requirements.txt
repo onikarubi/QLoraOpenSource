@@ -5,3 +5,5 @@ bitsandbytes
 tensorboard
 peft
 wandb
+datasets
+trl

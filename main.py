@@ -1,4 +1,5 @@
 from llm import CausalLM
+from runner import ModelRunner
 from train import ModelTrainer
 from dataset_manager import DatasetManager
 from tokenizer import Tokenizer
@@ -11,18 +12,10 @@ load_dotenv()
 
 if __name__ == '__main__':
     use_cuda = torch.cuda.is_available()
+    torch.cuda.empty_cache()
     device = torch.device("cuda" if use_cuda else "cpu")
-    data_path = './sample.jsonl'
+    adapter_path = './saved_model'
     repo_id = 'google/gemma-2-2b-it'
-    tokenizer = Tokenizer(repo_id)
-    manager = DatasetManager(data_path, format='chat_openai')
-    llm = CausalLM(repo_id)
-    trainer = ModelTrainer(
-        llm=llm,
-        tokenizer=tokenizer,
-        dataset_manager=manager,
-        lora_config='default',
-        training_args='default'
-    )
 
-    trainer.train('./saved_model')
+    runner = ModelRunner(repo_id, adapter_path)
+    runner.run("自己紹介をしてくれますか？")
