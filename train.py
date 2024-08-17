@@ -92,7 +92,7 @@ class ModelTrainer:
 
         except Exception as e:
             print('Failed to train the model')
-            print(e)
+            raise e
 
     def config_lora(
         self,
