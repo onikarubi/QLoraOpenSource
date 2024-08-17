@@ -29,7 +29,7 @@ class ModelRunner:
 
         with torch.no_grad():
             output_ids = self.llm.model.generate(
-                token_ids.input_ids,
+                token_ids,
                 max_new_tokens=600,
                 attention_mask=token_ids.attention_mask
             )
