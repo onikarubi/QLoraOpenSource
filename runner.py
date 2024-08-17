@@ -35,5 +35,5 @@ class ModelRunner:
             for input_ids, output_ids in zip(model_inputs.input_ids, generated_ids)
         ]
 
-        print(generated_ids)
-        return generated_ids
+        response = self.tokenizer.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
+        return response
