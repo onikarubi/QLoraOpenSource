@@ -75,8 +75,10 @@ class ModelTrainer:
 
     def train(self, saved_in_path: str):
         try:
-            self.trainer.train()
+            output = self.trainer.train()
             self.trainer.model.save_pretrained(saved_in_path)
+            logger.info("Model saved to %s", saved_in_path)
+            logger.info("Training output: %s", output)
         except Exception as e:
             logger.error("An error occurred during training: %s", e)
             raise e
