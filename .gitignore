@@ -4,3 +4,5 @@ __pycache__
 saved_model
 train_logs
 adapter
+output
+test_runner.py

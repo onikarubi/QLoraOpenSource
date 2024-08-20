@@ -75,6 +75,7 @@ class ModelTrainer:
     def train(self, saved_in_path: str):
         try:
             self._convert_normalization_layer_to_float32()
+            logger.debug("Training model...")
             output = self.trainer.train()
             self.trainer.model.save_pretrained(saved_in_path)
             logger.info("Model saved to %s", saved_in_path)
