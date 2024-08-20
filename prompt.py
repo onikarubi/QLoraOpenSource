@@ -18,6 +18,10 @@ class PromptFormatter(metaclass=abc.ABCMeta):
     def create_text_format(cls, dataset: Dataset) -> Dict[str, str]:
         pass
 
+    @classmethod
+    def get_prompt_format(cls):
+        return cls.PROMPT_FORMAT
+
 
 class PromptDefaultFormatter(PromptFormatter):
     @classmethod

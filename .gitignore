@@ -3,4 +3,4 @@ __pycache__
 .env
 saved_model
 train_logs
-output
+adapter

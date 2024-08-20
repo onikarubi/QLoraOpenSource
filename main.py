@@ -2,6 +2,7 @@ import argparse
 import yaml
 from llm import CausalLM
 from train import ModelTrainer
+from runner import ModelRunner
 from dataset_manager import DatasetManager
 from tokenizer import Tokenizer
 from dotenv import load_dotenv
@@ -37,7 +38,7 @@ def initialize_components(dataset_path: str, repo_id: str, config_file: str = No
 
     llm = CausalLM(
         repo_id=repo_id,
-        quantization_config=config.get("quantization_config"),
+        quantization_config=config.get("quantization_config", None),
         attn_implementation=config.get("attn_implementation", "eager"),
     )
     manager = DatasetManager(
@@ -62,9 +63,15 @@ def train_model(trainer, output_dir: str):
     trainer.train(saved_in_path=output_dir)
 
 
-def run_model():
-    """Placeholder function for running the model."""
-    logger.info("Run task is not yet implemented.")
+def run_model(repo_id: str, adapter_path: str, questions: list[str], max_tokens: int):
+    """Run inference using the model and respond to the provided questions."""
+    llm = CausalLM(repo_id=adapter_path)
+    tokenizer = Tokenizer(repo_id=repo_id)
+    runner = ModelRunner(llm=llm, tokenizer=tokenizer)
+
+    responses = runner.run(questions=questions, max_tokens=max_tokens)
+    for i, response in enumerate(responses, 1):
+        print(f"\nResponse {i}: {response}")
 
 
 def main():
@@ -97,6 +104,26 @@ def main():
     parser.add_argument(
         "--config_file", type=str, required=False, help="The configuration file to use"
     )
+    parser.add_argument(
+        "--adapter_path",
+        type=str,
+        required=False,
+        help="The path to the model adapter (required for running)",
+    )
+    parser.add_argument(
+        "--max_tokens",
+        type=int,
+        required=False,
+        default=500,
+        help="The maximum number of tokens to generate (default: 500)",
+    )
+    parser.add_argument(
+        "--questions",
+        type=str,
+        nargs="+",
+        required=False,
+        help="The questions to ask the model (required for running)",
+    )
 
     args = parser.parse_args()
 
@@ -116,11 +143,25 @@ def main():
         train_model(trainer, args.output_dir)
 
     elif args.task == "run":
-        run_model()
+        if not args.adapter_path or not args.questions:
+            parser.error(
+                "The --adapter_path and --questions arguments are required for the run task."
+            )
+        run_model(args.repo_id, args.adapter_path, args.questions, args.max_tokens)
 
 
 """
 !python main.py --task train --dataset_path ./sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output
+!python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --questions "自己紹介をしてくれますか？"
+
+--task: このスクリプトの実行タスクを指定します。train または run のいずれかを指定します。（必須）
+--dataset_path: データセットのパスを指定します。trainの場合は必須です。
+--adapter_path: モデルのアダプターパスを指定します。runの場合は必須です。
+--repo_id: モデルのリポジトリIDを指定します。（必須）
+--output_dir: モデルの保存先ディレクトリを指定します。trainの場合は必須です。
+--config_file: モデルの設定ファイルを指定します。（任意）もし指定しない場合はデフォルトの設定が使用されます。
+--max_tokens: 生成されるトークンの最大数を指定します。（任意）デフォルトは500です。
+--questions: モデルに対して質問をする際の質問文を指定します。（必須）複数の質問を指定する場合は空白で区切って指定します。
 """
 if __name__ == "__main__":
     main()

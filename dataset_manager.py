@@ -5,7 +5,6 @@ import pandas as pd
 
 
 class DatasetManager:
-
     def __init__(
         self, dataset_path: str, format: Literal["default", "chat_openai"]
     ) -> None:

@@ -25,7 +25,6 @@ class ModelTrainer:
         self.dataset_manager = dataset_manager
         self.lora_config = lora_config or self._create_default_lora_config()
         self.training_args = training_args or self._create_default_training_args()
-        self._convert_normalization_layer_to_float32()
 
     @property
     def trainer(self):
@@ -40,9 +39,9 @@ class ModelTrainer:
         )
 
     def _convert_normalization_layer_to_float32(self):
-        for name, module in self.llm.model.named_modules():
+        for name, module in self.trainer.model.named_modules():
             if "norm" in name:
-                module = module.to(torch.float32)
+                module.to(torch.float32)
 
     def _create_default_lora_config(self):
         return LoraConfig(
@@ -75,6 +74,7 @@ class ModelTrainer:
 
     def train(self, saved_in_path: str):
         try:
+            self._convert_normalization_layer_to_float32()
             output = self.trainer.train()
             self.trainer.model.save_pretrained(saved_in_path)
             logger.info("Model saved to %s", saved_in_path)
