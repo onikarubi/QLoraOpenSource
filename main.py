@@ -27,7 +27,9 @@ def setup_environment():
     return device
 
 
-def initialize_components(dataset_path: str, repo_id: str, config_file: str = None):
+def initialize_components(
+    dataset_path: str, repo_id: str, config_file: str = None, epochs: int = 3
+):
     """Initialize and return the model, dataset manager, tokenizer, and trainer."""
     # If a config file is provided, load it
     config = {}
@@ -54,6 +56,9 @@ def initialize_components(dataset_path: str, repo_id: str, config_file: str = No
         lora_config=config.get("lora_config", None),
         training_args=config.get("training_args", None),
     )
+
+    # Configure training arguments to use the specified number of epochs
+    trainer.config_train_args(num_train_epochs=epochs)
 
     return trainer
 
@@ -124,6 +129,13 @@ def main():
         required=False,
         help="The questions to ask the model (required for running)",
     )
+    parser.add_argument(
+        "--epochs",
+        type=int,
+        required=False,
+        default=3,
+        help="The number of epochs for training (default: 3)",
+    )
 
     args = parser.parse_args()
 
@@ -138,7 +150,7 @@ def main():
             )
 
         trainer = initialize_components(
-            args.dataset_path, args.repo_id, args.config_file
+            args.dataset_path, args.repo_id, args.config_file, args.epochs
         )
         train_model(trainer, args.output_dir)
 
@@ -149,9 +161,8 @@ def main():
             )
         run_model(args.repo_id, args.adapter_path, args.questions, args.max_tokens)
 
-
 """
-!python main.py --task train --dataset_path ./sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output
+!python main.py --task train --dataset_path ./sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 5
 !python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --questions "自己紹介をしてくれますか？"
 
 --task: このスクリプトの実行タスクを指定します。train または run のいずれかを指定します。（必須）
@@ -161,7 +172,9 @@ def main():
 --output_dir: モデルの保存先ディレクトリを指定します。trainの場合は必須です。
 --config_file: モデルの設定ファイルを指定します。（任意）もし指定しない場合はデフォルトの設定が使用されます。
 --max_tokens: 生成されるトークンの最大数を指定します。（任意）デフォルトは500です。
+--epochs: モデルのエポック数を指定します。（任意）デフォルトは3です。
 --questions: モデルに対して質問をする際の質問文を指定します。（必須）複数の質問を指定する場合は空白で区切って指定します。
 """
+
 if __name__ == "__main__":
     main()
