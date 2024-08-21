@@ -4,8 +4,8 @@ import torch
 from datasets import Dataset
 from dotenv import load_dotenv
 
-from dataset_manager import DatasetManager
-from logging_formatter import logger
+from qlora.dataset_manager import DatasetManager
+from qlora.logging_formatter import logger
 
 load_dotenv()
 

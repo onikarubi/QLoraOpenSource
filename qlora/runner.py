@@ -1,6 +1,6 @@
-from llm import CausalLM
-from tokenizer import Tokenizer
-from logging_formatter import logger
+from .llm import CausalLM
+from .tokenizer import Tokenizer
+from .logging_formatter import logger
 import torch
 
 

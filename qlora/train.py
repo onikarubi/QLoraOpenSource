@@ -1,12 +1,12 @@
 from transformers import (
     TrainingArguments,
 )
-from llm import CausalLM
-from tokenizer import Tokenizer
-from dataset_manager import DatasetManager
+from .llm import CausalLM
+from .tokenizer import Tokenizer
+from .dataset_manager import DatasetManager
 from peft import LoraConfig
 from trl import SFTTrainer
-from logging_formatter import logger
+from .logging_formatter import logger
 from typing import Optional
 from datasets import Dataset
 import torch

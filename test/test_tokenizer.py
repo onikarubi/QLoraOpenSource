@@ -4,7 +4,7 @@ from transformers import (
     BitsAndBytesConfig,
     TrainingArguments,
 )
-from tokenizer import Tokenizer
+from qlora.tokenizer import Tokenizer
 
 repo_id = "google/gemma-2-2b-it"
 
@@ -51,4 +51,3 @@ def test_tokenizer_padding():
     print("--------------------------------")
     print(test_tokenizer)
     print("--------------------------------")
-

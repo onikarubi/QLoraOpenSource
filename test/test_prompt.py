@@ -1,5 +1,9 @@
-from prompt import PromptChatOpenAIFormatter, PromptDefaultFormatter, PromptFormatter
-from dataset_manager import DatasetManager
+from qlora.prompt import (
+    PromptChatOpenAIFormatter,
+    PromptDefaultFormatter,
+    PromptFormatter,
+)
+from qlora.dataset_manager import DatasetManager
 from test_dataset_manager import create_validated_dataset
 
 PROMPT_FORMAT = """<start_of_turn>user

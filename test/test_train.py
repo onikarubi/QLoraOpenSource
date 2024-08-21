@@ -6,8 +6,8 @@ from trl import SFTTrainer
 from test_dataset_manager import create_test_dataset, create_dataset_manager
 from test_llm import create_casual_llm
 from test_tokenizer import create_tokenizer_instance
-from train import ModelTrainer
-from logging_formatter import logger
+from qlora.train import ModelTrainer
+from qlora.logging_formatter import logger
 import torch
 
 training_arguments = TrainingArguments(

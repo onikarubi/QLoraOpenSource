@@ -5,7 +5,7 @@ from transformers import (
     TrainingArguments,
 )
 
-from llm import CausalLM
+from qlora.llm import CausalLM
 import torch
 import bitsandbytes as bnb
 

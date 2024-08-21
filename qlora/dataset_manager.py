@@ -1,5 +1,5 @@
 from datasets import load_dataset, Dataset
-from prompt import PromptChatOpenAIFormatter, PromptDefaultFormatter
+from .prompt import PromptChatOpenAIFormatter, PromptDefaultFormatter
 from typing import Literal
 import pandas as pd
 

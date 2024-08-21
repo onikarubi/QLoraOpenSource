@@ -1,12 +1,12 @@
 import argparse
 import yaml
-from llm import CausalLM
-from train import ModelTrainer
-from runner import ModelRunner
-from dataset_manager import DatasetManager
-from tokenizer import Tokenizer
+from qlora.llm import CausalLM
+from qlora.train import ModelTrainer
+from qlora.runner import ModelRunner
+from qlora.dataset_manager import DatasetManager
+from qlora.tokenizer import Tokenizer
 from dotenv import load_dotenv
-from logging_formatter import logger
+from qlora.logging_formatter import logger
 import torch
 
 
@@ -162,7 +162,7 @@ def main():
         run_model(args.repo_id, args.adapter_path, args.questions, args.max_tokens)
 
 """
-!python main.py --task train --dataset_path ./sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 5
+!python main.py --task train --dataset_path datasets/sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 3
 !python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --questions "自己紹介をしてくれますか？"
 
 --task: このスクリプトの実行タスクを指定します。train または run のいずれかを指定します。（必須）
