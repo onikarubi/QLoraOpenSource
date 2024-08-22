@@ -1,6 +1,7 @@
-from datasets import Dataset
 import abc
 from typing import Dict
+
+from datasets import Dataset
 
 
 class PromptFormatter(metaclass=abc.ABCMeta):

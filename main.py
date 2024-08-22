@@ -162,7 +162,7 @@ def main():
         run_model(args.repo_id, args.adapter_path, args.questions, args.max_tokens)
 
 """
-!python main.py --task train --dataset_path datasets/sample.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 3
+!python main.py --task train --dataset_path datasets/simple.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 3
 !python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --questions "自己紹介をしてくれますか？"
 
 --task: このスクリプトの実行タスクを指定します。train または run のいずれかを指定します。（必須）

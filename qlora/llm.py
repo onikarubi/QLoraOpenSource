@@ -1,10 +1,8 @@
-from transformers import (
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
-)
-import bitsandbytes as bnb
 from typing import Optional
+
+import bitsandbytes as bnb
 import torch
+from transformers import AutoModelForCausalLM, BitsAndBytesConfig
 
 
 class CausalLM:
