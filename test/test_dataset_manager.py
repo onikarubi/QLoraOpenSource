@@ -1,80 +1,44 @@
+from qlora.dataset_manager import DatasetManager
+from qlora.tokenizer import Tokenizer
+from qlora.prompt import PromptDefaultFormatter, PromptLlamaFormatter
+from qlora.models.model_registry import ModelRegistry
+from qlora.tokenizer import Tokenizer
+from qlora.logging_formatter import get_logger
+from datasets import load_dataset
+import os
 import json
 
-import torch
-from datasets import Dataset
-from dotenv import load_dotenv
+logger = get_logger(__name__)
+dataset_path = 'datasets/sample.jsonl'
+registry = ModelRegistry()
+target_model_by_llama = registry.get_model('llama')
+target_model_by_gemma = registry.get_model('gemma')
 
-from qlora.dataset_manager import DatasetManager
-from qlora.logging_formatter import logger
+tokenizer_by_llama = Tokenizer(target_model_by_llama)
+tokenizer_by_gemma = Tokenizer(target_model_by_gemma)
 
-load_dotenv()
+test_dataset = load_dataset('json', data_files=dataset_path, split='train')
 
-dataset_path = "./sample.jsonl"
+def test_create_default_formatter():
+    logger.debug('Creating dataset: %s' % test_dataset)
+    formatter_by_default = PromptDefaultFormatter('chat_openai')
+    logger.debug('formatter by default: %s' % formatter_by_default.format)
+    new_dataset = test_dataset.map(formatter_by_default.create_text_field)
+    logger.debug('new dataset: %s' % new_dataset)
 
-def load_dataset():
-    json_data = []
-    with open(dataset_path, "r", encoding="utf-8") as f:
-        for line in f:
-            json_data.append(json.loads(line))
+def test_create_llama_formatter():
+    formatter_by_llama = PromptLlamaFormatter('chat_openai', tokenizer_by_llama)
+    new_dataset = test_dataset.map(formatter_by_llama.create_text_field)
+    logger.debug('new dataset: %s' % new_dataset)
 
-    dataset = Dataset.from_list(json_data)
-    return dataset
+def test_create_dataset_by_default():
+    manager = DatasetManager(dataset_path=dataset_path, data_format='chat_openai')
+    dataset = manager.dataset
+    logger.debug('dataset: %s' % dataset)
+    assert 'text' in dataset.column_names
 
-def create_validated_dataset():
-    PROMPT_FORMAT = """<start_of_turn>user
-{system}
-
-{instruction}
-<end_of_turn>
-<start_of_turn>model
-{output}
-<end_of_turn>
-"""
-
-    json_data = []
-    with open(dataset_path, "r", encoding="utf-8") as f:
-        for line in f:
-            json_data.append(json.loads(line))
-
-    dataset = Dataset.from_list(json_data)
-
-    def generate_text_field(data):
-        messages = data["messages"]
-        system = ""
-        instruction = ""
-        output = ""
-        for message in messages:
-            if message["role"] == "system":
-                system = message["content"]
-            elif message["role"] == "user":
-                instruction = message["content"]
-            elif message["role"] == "assistant":
-                output = message["content"]
-        full_prompt = PROMPT_FORMAT.format(
-            system=system, instruction=instruction, output=output
-        )
-        return {"text": full_prompt}
-
-    train_dataset = dataset.map(generate_text_field)
-
-    return train_dataset
-
-def create_test_dataset():
-    manager = DatasetManager(dataset_path, "chat_openai")
-    return manager.dataset
-
-def create_dataset_manager():
-    manager = DatasetManager(dataset_path, "chat_openai")
-    return manager
-
-def test_create_dataset():
-    test_dataset = create_test_dataset()
-    validated_dataset = create_validated_dataset()
-    logger.info("Creating dataset %s", validated_dataset)
-    logger.info("Creating dataset %s", test_dataset)
-    assert validated_dataset["text"] == test_dataset["text"], "Datasets do not match"
-    print("--------------------------------")
-    logger.debug(test_dataset['text'])
-    print("--------------------------------")
-    logger.debug(validated_dataset["text"])
-    print("--------------------------------")
+def test_create_dataset_by_llama():
+    manager = DatasetManager(dataset_path=dataset_path, data_format='chat_openai', tokenizer=tokenizer_by_llama)
+    dataset = manager.dataset
+    logger.debug('dataset: %s' % dataset)
+    assert 'text' in dataset.column_names

@@ -1,7 +1,7 @@
 from logging import DEBUG, INFO, Formatter, StreamHandler, getLogger
 
 
-def get_logger(name: str, level: int = INFO):
+def get_logger(name: str, level: int = DEBUG):
     logger = getLogger(name)
     handler = StreamHandler()
     handler.setLevel(level)

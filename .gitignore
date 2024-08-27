@@ -7,3 +7,5 @@ adapter
 output
 .vscode
 */simple.*
+wandb
+examples

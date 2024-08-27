@@ -1,6 +1,7 @@
 from typing import Optional
 
 import torch
+import wandb
 from peft import LoraConfig
 from transformers import TrainingArguments
 from trl import SFTTrainer
@@ -44,7 +45,7 @@ class ModelTrainer:
             warmup_ratio=0.03,
             weight_decay=0.001,
             group_by_length=True,
-            report_to="tensorboard",
+            report_to="wandb",
         )
 
     def _create_default_lora_config(self):
@@ -88,9 +89,14 @@ class ModelTrainer:
             trainer.model.save_pretrained(saved_in_path)
             logger.info("Model saved to %s", saved_in_path)
             logger.info("Training output: %s", output)
+            logger.info("Training complete👏!!")
         except Exception as e:
             logger.error("An error occurred during training: %s", e)
             raise e
+
+        finally:
+            logger.info("Finishing wandb run...")
+            wandb.finish()
 
     def config_lora(
         self,
@@ -138,5 +144,5 @@ class ModelTrainer:
             warmup_ratio=warmup_ratio,
             weight_decay=weight_decay,
             group_by_length=group_by_length,
-            report_to="tensorboard",
+            report_to="wandb",
         )
