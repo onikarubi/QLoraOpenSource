@@ -1,9 +1,9 @@
 import torch
-
 from .llm import CausalLM
-from .logging_formatter import logger
+from .logging_formatter import get_logger
 from .tokenizer import Tokenizer
 
+logger = get_logger(__name__)
 
 class ModelRunner:
     def __init__(self, llm: CausalLM, tokenizer: Tokenizer) -> None:
@@ -14,37 +14,42 @@ class ModelRunner:
 
     def run(self, questions: list[str], max_tokens: int = 500):
         responses = []
+
         for question in questions:
             try:
-                prompt = self.tokenizer.tokenizer.apply_chat_template(
+                prompt = self.tokenizer.hf_tokenizer.apply_chat_template(
                     conversation=[{"role": "user", "content": question}],
                     tokenize=False,
                     add_generation_prompt=True,
                 )
 
-                model_inputs = self.tokenizer.tokenizer(
+                model_inputs = self.tokenizer.hf_tokenizer(
                     [prompt], return_tensors="pt"
                 ).to(self.device)
+
                 generated_ids = self.llm.model.generate(
-                    model_inputs.input_ids,
+                    input_ids=model_inputs.input_ids,
                     attention_mask=model_inputs.attention_mask,
                     max_new_tokens=max_tokens,
                 )
-                generated_ids = [
+
+                trimmed_ids = [
                     output_ids[len(input_ids) :]
                     for input_ids, output_ids in zip(
                         model_inputs.input_ids, generated_ids
                     )
                 ]
 
-                response = self.tokenizer.tokenizer.batch_decode(
-                    generated_ids, skip_special_tokens=True
+                response = self.tokenizer.hf_tokenizer.batch_decode(
+                    trimmed_ids, skip_special_tokens=True
                 )[0]
+
                 logger.info("Generated response: %s", response)
                 responses.append(response)
 
             except torch.cuda.OutOfMemoryError as e:
                 logger.error("CUDA Out of Memory Error: %s", e)
+                torch.cuda.empty_cache()
                 raise e
             except RuntimeError as e:
                 logger.error("Runtime Error: %s", e)

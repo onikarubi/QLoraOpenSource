@@ -19,10 +19,14 @@ class CausalLM:
             quantization_config or self._create_default_quantization_config()
         )
         self.model = self._initialize_model()
+        self._linear_layer_names = None
 
     @property
     def linear_layer_names(self):
-        return self._find_all_linear_names()
+        if self._linear_layer_names is None:
+            self._linear_layer_names = self._find_all_linear_names()
+
+        return self._linear_layer_names
 
     def _create_default_quantization_config(self):
         return BitsAndBytesConfig(

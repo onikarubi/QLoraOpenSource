@@ -1,13 +1,10 @@
 from typing import Optional
-
 import torch
 import wandb
 from peft import LoraConfig
 from transformers import TrainingArguments
 from trl import SFTTrainer
-
 from datasets import Dataset
-
 from .dataset_manager import DatasetManager
 from .llm import CausalLM
 from .logging_formatter import logger
@@ -29,7 +26,7 @@ class ModelTrainer:
         self.lora_config = lora_config or self._create_default_lora_config()
         self.training_args = training_args or self._create_default_training_args()
 
-    def _create_default_training_args(self):
+    def _create_default_training_args(self) -> TrainingArguments:
         return TrainingArguments(
             output_dir="./train_logs",
             fp16=True,
@@ -48,7 +45,7 @@ class ModelTrainer:
             report_to="wandb",
         )
 
-    def _create_default_lora_config(self):
+    def _create_default_lora_config(self) -> LoraConfig:
         return LoraConfig(
             lora_alpha=8,
             lora_dropout=0.1,
@@ -58,38 +55,48 @@ class ModelTrainer:
             target_modules=self.llm.linear_layer_names,
         )
 
-    def create_trainer(self):
+    def create_sft_trainer(self) -> SFTTrainer:
+        """Creates and returns an SFTTrainer for training."""
         return SFTTrainer(
             model=self.llm.model,
-            tokenizer=self.tokenizer.tokenizer,
+            tokenizer=self.tokenizer.hf_tokenizer,
             train_dataset=self.dataset_manager.dataset,
-            dataset_text_field="text",
             peft_config=self.lora_config,
             args=self.training_args,
+            dataset_text_field="text",
             max_seq_length=512,
         )
 
-    def _convert_normalization_layer_to_float32(self, trainer: SFTTrainer):
+    def _convert_normalization_layer_to_float32(
+        self, trainer: SFTTrainer
+    ) -> SFTTrainer:
+        """Converts normalization layers in the model to float32 for better training stability."""
         for name, module in trainer.model.named_modules():
             if "norm" in name:
                 module.to(torch.float32)
-
         return trainer
 
-    def train(self, saved_in_path: str):
+    def train(self, saved_in_path: str) -> None:
+        """Trains the model and saves it to the specified path."""
         try:
-            logger.debug("Training model...")
-            trainer = self.create_trainer()
+            logger.debug("Starting model training...")
+            trainer = self.create_sft_trainer()
             trainer = self._convert_normalization_layer_to_float32(trainer)
-            logger.info('Trainer info:')
-            logger.info('epochs: %s', trainer.args.num_train_epochs)
-            logger.info('batch size: %s', trainer.args.per_device_train_batch_size)
-            logger.info('gradient accumulation steps: %s', trainer.args.gradient_accumulation_steps)
+            logger.info("Trainer info:")
+            logger.info("epochs: %s", trainer.args.num_train_epochs)
+            logger.info("batch size: %s", trainer.args.per_device_train_batch_size)
+            logger.info(
+                "gradient accumulation steps: %s",
+                trainer.args.gradient_accumulation_steps,
+            )
+
             output = trainer.train()
             trainer.model.save_pretrained(saved_in_path)
+
             logger.info("Model saved to %s", saved_in_path)
             logger.info("Training output: %s", output)
             logger.info("Training complete👏!!")
+
         except Exception as e:
             logger.error("An error occurred during training: %s", e)
             raise e
@@ -105,6 +112,7 @@ class ModelTrainer:
         r: int = 4,
         bias: str = "none",
     ) -> None:
+        """Configures the LoRA (Low-Rank Adaptation) settings."""
         self.lora_config = LoraConfig(
             lora_alpha=lora_alpha,
             lora_dropout=lora_dropout,
@@ -128,7 +136,8 @@ class ModelTrainer:
         warmup_ratio: float = 0.03,
         weight_decay: float = 0.001,
         group_by_length: bool = True,
-    ):
+    ) -> None:
+        """Configures the training arguments for the model."""
         self.training_args = TrainingArguments(
             output_dir=output_dir,
             fp16=fp16,
