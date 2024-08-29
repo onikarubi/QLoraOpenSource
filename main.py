@@ -43,11 +43,13 @@ def initialize_components(
         quantization_config=config.get("quantization_config", None),
         attn_implementation=config.get("attn_implementation", "eager"),
     )
-    manager = DatasetManager(
-        dataset_path=dataset_path, format=config.get("format", "chat_openai")
-    )
     tokenizer = Tokenizer(
         repo_id=repo_id, attn_implementation=config.get("attn_implementation", "eager")
+    )
+    manager = DatasetManager(
+        dataset_path=dataset_path,
+        data_format=config.get("format", "chat_openai"),
+        tokenizer=tokenizer,
     )
     trainer = ModelTrainer(
         llm=llm,
