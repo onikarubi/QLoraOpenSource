@@ -7,3 +7,4 @@ peft
 wandb
 datasets
 trl
+python-dotenv
