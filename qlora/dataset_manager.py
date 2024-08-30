@@ -1,10 +1,14 @@
 from typing import Dict, Literal, Optional
+
 import pandas as pd
+
 from datasets import Dataset, load_dataset
-from .prompt import PromptLlamaFormatter, PromptDefaultFormatter, PromptFormatter
-from .tokenizer import Tokenizer
+
 from .logging_formatter import getLogger
 from .models.model_registry import ModelRegistry
+from .prompt import (PromptDefaultFormatter, PromptFormatter,
+                     PromptLlama2Formatter, PromptLlama3Formatter)
+from .tokenizer import Tokenizer
 
 logger = getLogger(__name__)
 
@@ -44,22 +48,31 @@ class DatasetManager:
         Uses PromptLlamaFormatter if the model is of type 'llama' or 'elyza'.
         Otherwise, uses PromptDefaultFormatter.
         """
-        if self.model_name:
-            model_registry = ModelRegistry()
-            if self.model_name in model_registry.get_model(
-                "elyza"
-            ) or self.model_name in model_registry.get_model("llama"):
-                logger.debug("model_name is in llama or elyza")
-                formatter = PromptLlamaFormatter(
-                    data_type=self.format, tokenizer=self.tokenizer
-                )
-            else:
-                formatter = PromptDefaultFormatter(data_type=self.format)
-        else:
-            formatter = PromptDefaultFormatter(data_type=self.format)
+        formatter = self._select_formatter(self.model_name)
 
         # Use the formatter to create a text field for each example
         return formatter.create_text_field(example)
+
+    def _select_formatter(self, model_name: str) -> PromptFormatter:
+        model_registry = ModelRegistry()
+
+        if model_name in model_registry.get_model(
+            family="llama",
+            version='llama3'
+        ) or model_name in model_registry.get_model(
+            family="elyza",
+            version='llama3'
+        ):
+            return PromptLlama3Formatter(data_type=self.format, tokenizer=self.tokenizer)
+
+        elif model_name in model_registry.get_model(
+            family="elyza",
+            version='llama2'
+        ):
+            return PromptLlama2Formatter(data_type=self.format, tokenizer=self.tokenizer)
+
+        else:
+            return PromptDefaultFormatter(data_type=self.format)
 
     def _load_dataset(self) -> Dataset:
         """Loads dataset based on file extension."""

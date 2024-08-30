@@ -70,15 +70,15 @@ def train_model(trainer, output_dir: str):
     trainer.train(saved_in_path=output_dir)
 
 
-def run_model(repo_id: str, adapter_path: str, questions: list[str], max_tokens: int):
+def run_model(repo_id: str, adapter_path: str, questions: list[str], system: str, max_tokens: int):
     """Run inference using the model and respond to the provided questions."""
     llm = CausalLM(repo_id=adapter_path)
     tokenizer = Tokenizer(repo_id=repo_id)
     runner = ModelRunner(llm=llm, tokenizer=tokenizer)
 
-    responses = runner.run(questions=questions, max_tokens=max_tokens)
+    responses = runner.run(questions=questions, system=system, max_tokens=max_tokens)
     for i, response in enumerate(responses, 1):
-        print(f"\nResponse {i}: {response}")
+        logger.info(f"\nResponse {i}: {response}")
 
 
 def main():
@@ -138,6 +138,13 @@ def main():
         default=3,
         help="The number of epochs for training (default: 3)",
     )
+    parser.add_argument(
+        "--system",
+        type=str,
+        required=False,
+        default="",
+        help="The system text to use when asking questions"
+    )
 
     args = parser.parse_args()
 
@@ -161,12 +168,18 @@ def main():
             parser.error(
                 "The --adapter_path and --questions arguments are required for the run task."
             )
-        run_model(args.repo_id, args.adapter_path, args.questions, args.max_tokens)
+        run_model(
+            repo_id=args.repo_id,
+            adapter_path=args.adapter_path,
+            questions=args.questions,
+            system=args.system,
+            max_tokens=args.max_tokens,
+        )
 
 """
 !python main.py --task train --dataset_path datasets/simple.jsonl --repo_id google/gemma-2-2b-it --output_dir ./output --epochs 3
 
-!python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --questions "自己紹介をしてくれますか？"
+!python main.py --task run --repo_id google/gemma-2-2b-it --adapter_path ./output --max_tokens 500 --system "あなたはずんだもんです。嘘をつくのは苦手です。" --questions "自己紹介をしてくれますか？"
 
 --task: このスクリプトの実行タスクを指定します。train または run のいずれかを指定します。（必須）
 --dataset_path: データセットのパスを指定します。trainの場合は必須です。
@@ -177,6 +190,7 @@ def main():
 --max_tokens: 生成されるトークンの最大数を指定します。（任意）デフォルトは500です。
 --epochs: モデルのエポック数を指定します。（任意）デフォルトは3です。
 --questions: モデルに対して質問をする際の質問文を指定します。（必須）複数の質問を指定する場合は空白で区切って指定します。
+--system: モデルに対して質問をする際のシステム文を指定します。（任意）指定しない場合は空文字列が使用されます。
 """
 
 if __name__ == "__main__":

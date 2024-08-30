@@ -1,15 +1,10 @@
 import abc
 from typing import Dict, Literal, Tuple
-
-from datasets import Dataset
-
 from .tokenizer import Tokenizer
 from .models.model_registry import ModelRegistry
-from transformers.tokenization_utils import PreTrainedTokenizer
 from .logging_formatter import get_logger
 
 logger = get_logger(__name__)
-
 
 class PromptFormatter(metaclass=abc.ABCMeta):
     def __init__(self, data_type: Literal["default", "chat_openai"]) -> None:
@@ -23,6 +18,11 @@ class PromptFormatter(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def _generate_prompt(self, example: Dict) -> str:
         """Generates the prompt based on the specified data type."""
+        pass
+
+    @abc.abstractmethod
+    def create_input_prompt(self, system: str, instruction: str) -> str:
+        """Creates the input prompt based on the specified data type."""
         pass
 
 
@@ -71,8 +71,77 @@ class PromptDefaultFormatter(PromptFormatter):
                 output += message["content"]
         return system, instruction, output
 
+    def create_input_prompt(self, system: str, instruction: str) -> str:
+        template = """<start_of_turn>user
+{system}
 
-class PromptLlamaFormatter(PromptFormatter):
+{instruction}
+<end_of_turn>
+"""
+        return template.format(system=system, instruction=instruction)
+
+
+class PromptLlama2Formatter(PromptFormatter):
+    def __init__(self, data_type: Literal['default'] | Literal['chat_openai'], tokenizer: Tokenizer) -> None:
+        super().__init__(data_type)
+        self.model_registry = ModelRegistry()
+        self.tokenizer = tokenizer
+
+    def _generate_prompt(self, example: Dict) -> str:
+        if self.data_type != "chat_openai":
+            raise ValueError("Data type not supported")
+
+        return self._create_base_format(example["messages"])
+
+    def _create_base_format(self, messages: list) -> str:
+        """Defines the default format for prompts."""
+        B_INST, E_INST = "[INST]", "[/INST]"
+        B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
+        R_START, R_END = "[R_START]", "[/R_END]"
+
+        system, instruction, output = self._parse_messages(messages)
+
+        template = "<s>{bos_token}{b_inst} {system}{prompt} {e_inst} {r_start} {output} {r_end}</s>".format(
+            bos_token=self.tokenizer.hf_tokenizer.bos_token,
+            b_inst=B_INST,
+            e_inst=E_INST,
+            r_start=R_START,
+            r_end=R_END,
+            system=f'{B_SYS}{system}{E_SYS}',
+            prompt=instruction,
+            output=output
+        )
+
+        return template
+
+    def _parse_messages(self, messages: list) -> Tuple[str, str, str]:
+        """Parses messages to extract system, user, and assistant contents."""
+        system, instruction, output = "", "", ""
+        for message in messages:
+            if message["role"] == "system":
+                system += message["content"]
+            elif message["role"] == "user":
+                instruction += message["content"]
+            elif message["role"] == "assistant":
+                output += message["content"]
+        return system, instruction, output
+
+    def create_input_prompt(self, system: str, instruction: str) -> str:
+        B_INST, E_INST = "[INST]", "[/INST]"
+        B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
+
+        prompt = "{bos_token}{b_inst} {system}{prompt} {e_inst} ".format(
+            bos_token=self.tokenizer.hf_tokenizer.eos_token,
+            b_inst=B_INST,
+            e_inst=E_INST,
+            system=f'{B_SYS}{system}{E_SYS}',
+            prompt=instruction
+        )
+
+        return prompt
+
+
+class PromptLlama3Formatter(PromptFormatter):
     def __init__(
         self, data_type: Literal["default", "chat_openai"], tokenizer: Tokenizer
     ) -> None:
@@ -91,8 +160,12 @@ class PromptLlamaFormatter(PromptFormatter):
     def _validate_model_type(self, tokenizer: Tokenizer) -> None:
         """Validates if the model type is supported by the formatter."""
         if tokenizer.repo_id not in self.model_registry.get_model(
-            "elyza"
-        ) and tokenizer.repo_id not in self.model_registry.get_model("llama"):
+            family='elyza',
+            version='llama3',
+        ) and tokenizer.repo_id not in self.model_registry.get_model(
+            family="llama",
+            version='llama3'
+        ):
             raise ValueError("Model not supported")
 
     def _create_base_format(self, messages: list) -> str:
@@ -109,3 +182,16 @@ class PromptLlamaFormatter(PromptFormatter):
 
         template = self.tokenizer.hf_tokenizer.apply_chat_template(data, tokenize=False)
         return template
+
+    def create_input_prompt(self, system: str, instruction: str) -> str:
+        conversions = [
+            {'role': 'system', 'content': system},
+            {'role': 'user', 'content': instruction}
+        ]
+        prompt = self.tokenizer.hf_tokenizer.apply_chat_template(
+            conversation=conversions,
+            tokenize=False,
+            add_generation_prompt=True
+        )
+
+        return prompt
