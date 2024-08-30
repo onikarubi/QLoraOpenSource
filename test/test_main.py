@@ -8,7 +8,6 @@ from qlora.logging_formatter import get_logger
 
 logger = get_logger(__name__, level=INFO)
 
-# テストデータのパラメータ化
 test_data = [
     (
         "google/gemma-2-2b-it",
