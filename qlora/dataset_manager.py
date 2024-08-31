@@ -68,6 +68,10 @@ class DatasetManager:
         elif model_name in model_registry.get_model(
             family="elyza",
             version='llama2'
+        ) or model_name in model_registry.get_model(
+            family="elyza",
+            version='llama2',
+            variant='instruct'
         ):
             return PromptLlama2Formatter(data_type=self.format, tokenizer=self.tokenizer)
 
