@@ -38,7 +38,7 @@ class DatasetManager:
     def get_dataset(self) -> Dataset:
         """Loads and processes the dataset to add text fields."""
         init_dataset = self._load_dataset()
-        dataset = init_dataset.map(self._create_text_field)
+        dataset = init_dataset.map(self._create_text_field, load_from_cache_file=False)
         return dataset
 
     def _create_text_field(self, example: Dict) -> Dict[str, str]:
