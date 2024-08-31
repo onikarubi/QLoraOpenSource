@@ -7,9 +7,10 @@ from trl import SFTTrainer
 from datasets import Dataset
 from .dataset_manager import DatasetManager
 from .llm import CausalLM
-from .logging_formatter import logger
+from .logging_formatter import get_logger
 from .tokenizer import Tokenizer
 
+logger = get_logger(__name__)
 
 class ModelTrainer:
     def __init__(

@@ -11,6 +11,9 @@ class ModelRegistry:
             },
             "llama": {
                 "default": "meta-llama/Meta-Llama-3-8B-Instruct",
+                'llama3': {
+                    'default': 'meta-llama/Meta-Llama-3-8B-Instruct',
+                },
             },
             "elyza": {
                 "default": "elyza/Llama-3-ELYZA-JP-8B",
