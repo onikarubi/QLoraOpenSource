@@ -3,9 +3,10 @@ import pytest
 from qlora.dataset_manager import DatasetManager
 from qlora.logging_formatter import get_logger
 from qlora.models.model_registry import ModelRegistry
-from qlora.prompt import (PromptDefaultFormatter, PromptLlama2Formatter,
-                          PromptLlama3Formatter)
+from qlora.prompt import (PromptLlama2Formatter,
+                          PromptLlama3Formatter, PromptDefaultFormatter)
 from qlora.tokenizer import Tokenizer
+
 
 logger = get_logger(__name__)
 
@@ -32,6 +33,11 @@ def test_select_formatter(model_name, model_kwargs):
         dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer
     )
     formatter = manager._select_formatter(tokenizer.repo_id)
+
+    print('--------------------------------')
+    logger.info("get_dataset: %s", manager.dataset["text"])
+    print('--------------------------------')
+    print()
 
     if model_kwargs.get("version") == "llama3":
         assert isinstance(formatter, PromptLlama3Formatter)
