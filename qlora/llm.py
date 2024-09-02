@@ -3,8 +3,6 @@ from typing import Optional, Literal
 import bitsandbytes as bnb
 import torch
 from transformers import AutoModelForCausalLM, BitsAndBytesConfig
-import dataclasses
-
 
 class CausalLM:
     def __init__(
