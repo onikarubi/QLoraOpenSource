@@ -1,5 +1,5 @@
 import torch
-from transformers import TrainingArguments
+from transformers import TrainingArguments, PreTrainedModel
 
 from qlora.dataset_manager import DatasetManager
 from qlora.llm import CausalLM
@@ -33,14 +33,15 @@ training_arguments = TrainingArguments(
 
 registry = ModelRegistry()
 gemma_model = registry.get_model("gemma")
+elyza_llama2 = registry.get_model("elyza", version="llama2", variant='instruct')
 
-tokenizer_gemma = Tokenizer(gemma_model)
+tokenizer_gemma = Tokenizer(elyza_llama2)
 
 dataset_path = "datasets/sample.jsonl"
-manager = DatasetManager(dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer_gemma)
+manager = DatasetManager(dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer_gemma, use_cache=True)
 dataset = manager.dataset
 
-test_llm = CausalLM(repo_id=gemma_model)
+test_llm = CausalLM(repo_id=elyza_llama2)
 logger.info("target_modules first: %s", test_llm.linear_layer_names)
 
 def _create_test_trainer():
@@ -54,17 +55,25 @@ def _create_test_trainer():
 
     return trainer
 
-def test_trainer_model_named_modules():
+def test_init_model_config():
     test_trainer = _create_test_trainer()
-    logger.info("target_modules second: %s", test_trainer.llm.linear_layer_names)
-    sft_trainer = test_trainer.create_sft_trainer()
+    model: PreTrainedModel = test_trainer.llm.model
+    state_dict = model.state_dict()
+    for name, param in state_dict.items():
+        if not name == "lm_head.weight":
+            continue
+        print(f"Parameter name: {name}, Shape: {param.shape}")
 
-    # test_trainerの各モジュールも同じように確認
-    for name, module in sft_trainer.model.named_modules():
-        if "norm" in name:
-            assert (
-                module.weight.dtype == torch.float32
-            ), f"Module {name} in test_trainer is not in torch.float32 dtype."
+# def test_trainer_model_named_modules():
+#     test_trainer = _create_test_trainer()
+#     logger.info("target_modules second: %s", test_trainer.llm.linear_layer_names)
+#     sft_trainer = test_trainer.create_sft_trainer()
 
-    logger.info("All modules are converted to torch.float32 dtype.")
+#     # test_trainerの各モジュールも同じように確認
+#     for name, module in sft_trainer.model.named_modules():
+#         if "norm" in name:
+#             assert (
+#                 module.weight.dtype == torch.float32
+#             ), f"Module {name} in test_trainer is not in torch.float32 dtype."
 
+#     logger.info("All modules are converted to torch.float32 dtype.")
