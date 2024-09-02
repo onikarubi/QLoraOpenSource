@@ -34,11 +34,6 @@ def test_select_formatter(model_name, model_kwargs):
     )
     formatter = manager._select_formatter(tokenizer.repo_id)
 
-    print('--------------------------------')
-    logger.info("get_dataset: %s", manager.dataset["text"])
-    print('--------------------------------')
-    print()
-
     if model_kwargs.get("version") == "llama3":
         assert isinstance(formatter, PromptLlama3Formatter)
 
@@ -46,6 +41,7 @@ def test_select_formatter(model_name, model_kwargs):
         assert isinstance(formatter, PromptLlama2Formatter)
 
     elif model_kwargs.get("version") == "llama2" and model_kwargs.get('variant') == "instruct":
+        logger.info(manager.dataset["text"])
         assert isinstance(formatter, PromptLlama2Formatter)
 
     else:

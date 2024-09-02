@@ -97,11 +97,11 @@ class PromptLlama2Formatter(PromptFormatter):
         """Defines the default format for prompts."""
         B_INST, E_INST = "[INST]", "[/INST]"
         B_SYS, E_SYS = "<<SYS>>\n", "\n<</SYS>>\n\n"
-        R_START, R_END = "[R_START]", "[/R_END]"
+        R_START, R_END = "[R_START]", "[R_END]"
 
         system, instruction, output = self._parse_messages(messages)
 
-        template = "<s>{bos_token}{b_inst} {system}{prompt} {e_inst} {r_start} {output} {r_end}</s>".format(
+        template = "{bos_token}{b_inst} {system}{prompt} {e_inst} {r_start} {output} {r_end}{eos_token}".format(
             bos_token=self.tokenizer.hf_tokenizer.bos_token,
             b_inst=B_INST,
             e_inst=E_INST,
@@ -109,7 +109,8 @@ class PromptLlama2Formatter(PromptFormatter):
             r_end=R_END,
             system=f'{B_SYS}{system}{E_SYS}',
             prompt=instruction,
-            output=output
+            output=output,
+            eos_token=self.tokenizer.hf_tokenizer.eos_token
         )
 
         return template
@@ -177,8 +178,6 @@ class PromptLlama3Formatter(PromptFormatter):
                 data.append({"role": message["role"], "content": message["content"]})
             else:
                 raise ValueError("Role not supported")
-
-        logger.debug("Creating data: %s", data)
 
         template = self.tokenizer.hf_tokenizer.apply_chat_template(data, tokenize=False)
         return template

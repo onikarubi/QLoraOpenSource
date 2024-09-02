@@ -1,6 +1,9 @@
 from transformers import AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
+from .models.model_registry import ModelRegistry
+from .logging_formatter import get_logger
 
+logger = get_logger(__name__)
 
 class Tokenizer:
     """
@@ -28,6 +31,16 @@ class Tokenizer:
         """
         return self._hf_tokenizer  # Property with a more descriptive name
 
+    def get_additional_special_tokens(self) -> list[str] | None:
+        """
+        Returns the additional special tokens added to the tokenizer.
+
+        Returns:
+            list[str] | None: A list of special tokens or None if no special tokens were added.
+        """
+        special_tokens_dict = self.hf_tokenizer.special_tokens_map
+        return special_tokens_dict.get("additional_special_tokens")
+
     def _initialize_tokenizer(self) -> PreTrainedTokenizerBase:
         """
         Initializes the tokenizer with the specified settings.
@@ -41,10 +54,44 @@ class Tokenizer:
             add_eos_token=True,
         )
 
+        special_tokens = self._create_special_tokens()
+        if special_tokens:
+            tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
+
         # Ensure that the pad token is set to eos token if not already set
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token = tokenizer.eos_token
 
         tokenizer.padding_side = "right"
+
+        self._check_special_tokens(tokenizer, special_tokens)
         return tokenizer
 
+    def _create_special_tokens(self) -> list[str] | None:
+        """
+        Creates a list of special tokens from the tokenizer.
+
+        Returns:
+            list[str]: A list of special tokens.
+        """
+        registry = ModelRegistry()
+
+        if self.repo_id in registry.get_model(family="elyza", version="llama2") or self.repo_id in registry.get_model(family="elyza", version="llama2", variant="instruct"):
+            logger.debug("Creating special tokens: %s", self.repo_id)
+            return ["[R_START]", "[R_END]"]
+
+        return None
+
+    def _check_special_tokens(
+        self, tokenizer: PreTrainedTokenizerBase, special_tokens: list[str] | None
+    ):
+        """Check to see if any special tokens have been added to the tokenizer."""
+        if special_tokens:
+            added_special_tokens = set(tokenizer.all_special_tokens)
+            for token in special_tokens:
+                if token in added_special_tokens:
+                    logger.info(f"特別なトークン '{token}' は正常に追加されました。")
+                else:
+                    logger.warning(f"特別なトークン '{token}' は追加されていません。")
+        else:
+            logger.info("追加する特別なトークンは提供されませんでした。")
