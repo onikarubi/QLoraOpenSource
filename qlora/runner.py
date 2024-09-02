@@ -45,6 +45,8 @@ class ModelRunner:
                     input_ids=model_inputs.input_ids,
                     attention_mask=model_inputs.attention_mask,
                     max_new_tokens=max_tokens,
+                    pad_token_id=self.tokenizer.hf_tokenizer.pad_token_id,
+                    eos_token_id=self.tokenizer.hf_tokenizer.eos_token_id,
                 )
 
                 trimmed_ids = [

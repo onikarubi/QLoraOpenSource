@@ -1,7 +1,5 @@
 import torch
-from peft import LoraConfig
-from transformers import DataCollatorWithPadding, TrainingArguments
-from trl import SFTTrainer
+from transformers import TrainingArguments
 
 from qlora.dataset_manager import DatasetManager
 from qlora.llm import CausalLM
@@ -9,6 +7,8 @@ from qlora.logging_formatter import get_logger, logger
 from qlora.models.model_registry import ModelRegistry
 from qlora.tokenizer import Tokenizer
 from qlora.train import ModelTrainer
+
+torch.cuda.empty_cache()
 
 logger = get_logger(__name__)
 
@@ -33,10 +33,8 @@ training_arguments = TrainingArguments(
 
 registry = ModelRegistry()
 gemma_model = registry.get_model("gemma")
-# llama_model = registry.get_model("llama")
 
 tokenizer_gemma = Tokenizer(gemma_model)
-# tokenizer_llama = Tokenizer(llama_model)
 
 dataset_path = "datasets/sample.jsonl"
 manager = DatasetManager(dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer_gemma)
@@ -47,11 +45,11 @@ logger.info("target_modules first: %s", test_llm.linear_layer_names)
 
 def _create_test_trainer():
     trainer = ModelTrainer(
-        llm=test_llm,  # CausalLMをセット
-        tokenizer=tokenizer_gemma,  # Tokenizerをセット
-        dataset_manager=manager,  # DatasetManagerをセット
-        lora_config=None,  # LoRAのConfigをセット
-        training_args=None,  # 学習パラメータをセット
+        llm=test_llm,  
+        tokenizer=tokenizer_gemma,  
+        dataset_manager=manager, 
+        lora_config=None,  
+        training_args=None, 
     )
 
     return trainer
@@ -70,8 +68,3 @@ def test_trainer_model_named_modules():
 
     logger.info("All modules are converted to torch.float32 dtype.")
 
-def test_train():
-    trainer = _create_test_trainer()
-    logger.info('target_modules last: %s', trainer.llm.linear_layer_names)
-    trainer.train('./test_output')
-    logger.info("Training completed successfully.")

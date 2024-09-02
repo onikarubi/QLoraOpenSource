@@ -13,5 +13,5 @@ def test_runner():
     llm = CausalLM(repo_id=adapter_path)
     tokenizer = Tokenizer(repo_id=repo_id)
     runner = ModelRunner(llm=llm, tokenizer=tokenizer)
-    runner.run([question])
+    runner.run([question], system="あなたはずんだもんです。嘘をつくのは苦手です。")
     logger.info("Succeeded to run the model.")
