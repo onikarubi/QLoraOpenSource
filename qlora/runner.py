@@ -15,15 +15,7 @@ class ModelRunner:
 
     def _init_model_config(self):
         """Initialize the model configuration based on tokenizer."""
-        additional_tokens = self.tokenizer.get_additional_special_tokens()
-        if additional_tokens:
-            current_vocab_size = self.llm.model.config.vocab_size
-            new_vocab_size = len(self.tokenizer.hf_tokenizer)
-
-            if new_vocab_size != current_vocab_size:
-                self.llm.model.resize_token_embeddings(new_vocab_size)
-            else:
-                logger.info("Tokenizer and model have the same vocab size.")
+        self.llm.model.resize_token_embeddings(len(self.tokenizer.hf_tokenizer))
 
     def _create_prompt(self, system: str, instruction: str) -> str:
         registry = ModelRegistry()
