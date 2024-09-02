@@ -12,7 +12,18 @@ class ModelRunner:
         self.llm = llm
         self.tokenizer = tokenizer
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        logger.info("Using device: %s", self.device)
+
+    def _init_model_config(self):
+        """Initialize the model configuration based on tokenizer."""
+        additional_tokens = self.tokenizer.get_additional_special_tokens()
+        if additional_tokens:
+            current_vocab_size = self.llm.model.config.vocab_size
+            new_vocab_size = len(self.tokenizer.hf_tokenizer)
+
+            if new_vocab_size != current_vocab_size:
+                self.llm.model.resize_token_embeddings(new_vocab_size)
+            else:
+                logger.info("Tokenizer and model have the same vocab size.")
 
     def _create_prompt(self, system: str, instruction: str) -> str:
         registry = ModelRegistry()
