@@ -12,6 +12,7 @@ class ModelRunner:
         self.llm = llm
         self.tokenizer = tokenizer
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self._init_model_config()
 
     def _init_model_config(self):
         """Initialize the model configuration based on tokenizer."""
