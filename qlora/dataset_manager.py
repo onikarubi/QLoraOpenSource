@@ -58,23 +58,10 @@ class DatasetManager:
     def _select_formatter(self, model_name: str) -> PromptFormatter:
         model_registry = ModelRegistry()
 
-        if model_name in model_registry.get_model(
-            family="llama",
-            version='llama3'
-        ) or model_name in model_registry.get_model(
-            family="elyza",
-            version='llama3'
-        ):
+        if model_registry.is_llama3(model_name):
             return PromptLlama3Formatter(data_type=self.format, tokenizer=self.tokenizer)
 
-        elif model_name in model_registry.get_model(
-            family="elyza",
-            version='llama2'
-        ) or model_name in model_registry.get_model(
-            family="elyza",
-            version='llama2',
-            variant='instruct'
-        ):
+        elif model_registry.is_llama2(model_name):
             return PromptLlama2Formatter(data_type=self.format, tokenizer=self.tokenizer)
 
         else:

@@ -55,25 +55,16 @@ def _create_test_trainer():
 
     return trainer
 
-def test_init_model_config():
+def test_trainer_model_named_modules():
     test_trainer = _create_test_trainer()
-    model: PreTrainedModel = test_trainer.llm.model
-    state_dict = model.state_dict()
-    for name, param in state_dict.items():
-        if not name == "lm_head.weight":
-            continue
-        print(f"Parameter name: {name}, Shape: {param.shape}")
+    logger.info("target_modules second: %s", test_trainer.llm.linear_layer_names)
+    sft_trainer = test_trainer.create_sft_trainer()
 
-# def test_trainer_model_named_modules():
-#     test_trainer = _create_test_trainer()
-#     logger.info("target_modules second: %s", test_trainer.llm.linear_layer_names)
-#     sft_trainer = test_trainer.create_sft_trainer()
+    # test_trainerの各モジュールも同じように確認
+    for name, module in sft_trainer.model.named_modules():
+        if "norm" in name:
+            assert (
+                module.weight.dtype == torch.float32
+            ), f"Module {name} in test_trainer is not in torch.float32 dtype."
 
-#     # test_trainerの各モジュールも同じように確認
-#     for name, module in sft_trainer.model.named_modules():
-#         if "norm" in name:
-#             assert (
-#                 module.weight.dtype == torch.float32
-#             ), f"Module {name} in test_trainer is not in torch.float32 dtype."
-
-#     logger.info("All modules are converted to torch.float32 dtype.")
+    logger.info("All modules are converted to torch.float32 dtype.")

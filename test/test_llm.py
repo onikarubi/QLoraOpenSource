@@ -1,29 +1,25 @@
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    BitsAndBytesConfig,
-    TrainingArguments,
-)
+import bitsandbytes as bnb
+import torch
+from transformers import (AutoModelForCausalLM, AutoTokenizer,
+                          BitsAndBytesConfig, TrainingArguments)
 
 from qlora.llm import CausalLM
-import torch
-import bitsandbytes as bnb
 
 repo_id = "google/gemma-2-2b-it"
 
 quantization_config = BitsAndBytesConfig(
-    load_in_4bit=True,  # 4ビット量子化を使用
-    bnb_4bit_quant_type="nf4",  # 4ビット量子化の種類にnf4（NormalFloat4）を使用
-    bnb_4bit_use_double_quant=True,  # 二重量子化を使用
-    bnb_4bit_compute_dtype=torch.float16,  # 量子化のデータ型をfloat16に設定
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_use_double_quant=True,
+    bnb_4bit_compute_dtype=torch.float16, 
 )
 
 def create_validated_model():
     model = AutoModelForCausalLM.from_pretrained(
-        pretrained_model_name_or_path=repo_id,  # モデルのリポジトリIDをセット
-        device_map={"": "cuda"},  # 使用デバイスを設定
-        quantization_config=quantization_config,  # 量子化のConfigをセット
-        attn_implementation="eager",  # 注意機構に"eager"を設定（Gemma2モデルの学習で推奨されているため）
+        pretrained_model_name_or_path=repo_id,
+        device_map={"": "cuda"},
+        quantization_config=quantization_config,
+        attn_implementation="eager",
     )
 
     model.config.use_cache = False

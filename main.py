@@ -72,9 +72,7 @@ def train_model(trainer, output_dir: str):
 
 def run_model(repo_id: str, adapter_path: str, questions: list[str], system: str, max_tokens: int):
     """Run inference using the model and respond to the provided questions."""
-    llm = CausalLM(repo_id=adapter_path)
-    tokenizer = Tokenizer(repo_id=repo_id)
-    runner = ModelRunner(llm=llm, tokenizer=tokenizer)
+    runner = ModelRunner(adapter_path=adapter_path, base_model=repo_id)
 
     responses = runner.run(questions=questions, system=system, max_tokens=max_tokens)
     for i, response in enumerate(responses, 1):
