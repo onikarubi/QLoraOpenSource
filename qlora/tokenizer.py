@@ -1,7 +1,8 @@
 from transformers import AutoTokenizer
 from transformers.tokenization_utils_base import PreTrainedTokenizerBase
-from .models.model_registry import ModelRegistry
+
 from .logging_formatter import get_logger
+from .models.model_registry import ModelRegistry
 
 logger = get_logger(__name__)
 
@@ -17,9 +18,8 @@ class Tokenizer:
     def __init__(self, repo_id: str, attn_implementation: str = "eager") -> None:
         self.repo_id = repo_id
         self.attn_implementation = attn_implementation
-        self._hf_tokenizer = (
-            self._initialize_tokenizer()
-        )  # Internal attribute with a more descriptive name
+        self._hf_tokenizer = self._initialize_tokenizer()
+        self.registry = ModelRegistry()
 
     @property
     def hf_tokenizer(self) -> PreTrainedTokenizerBase:
@@ -58,7 +58,6 @@ class Tokenizer:
         if special_tokens:
             tokenizer.add_special_tokens({"additional_special_tokens": special_tokens})
 
-        # Ensure that the pad token is set to eos token if not already set
         if tokenizer.pad_token_id is None:
             tokenizer.pad_token = tokenizer.eos_token
 
@@ -74,9 +73,10 @@ class Tokenizer:
         Returns:
             list[str]: A list of special tokens.
         """
+
         registry = ModelRegistry()
 
-        if self.repo_id in registry.get_model(family="elyza", version="llama2") or self.repo_id in registry.get_model(family="elyza", version="llama2", variant="instruct"):
+        if registry.is_llama2(self.repo_id):
             logger.debug("Creating special tokens: %s", self.repo_id)
             return ["[R_START]", "[R_END]"]
 

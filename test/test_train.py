@@ -1,5 +1,5 @@
 import torch
-from transformers import TrainingArguments
+from transformers import TrainingArguments, PreTrainedModel
 
 from qlora.dataset_manager import DatasetManager
 from qlora.llm import CausalLM
@@ -33,14 +33,15 @@ training_arguments = TrainingArguments(
 
 registry = ModelRegistry()
 gemma_model = registry.get_model("gemma")
+elyza_llama2 = registry.get_model("elyza", version="llama2", variant='instruct')
 
-tokenizer_gemma = Tokenizer(gemma_model)
+tokenizer_gemma = Tokenizer(elyza_llama2)
 
 dataset_path = "datasets/sample.jsonl"
-manager = DatasetManager(dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer_gemma)
+manager = DatasetManager(dataset_path=dataset_path, data_format="chat_openai", tokenizer=tokenizer_gemma, use_cache=True)
 dataset = manager.dataset
 
-test_llm = CausalLM(repo_id=gemma_model)
+test_llm = CausalLM(repo_id=elyza_llama2)
 logger.info("target_modules first: %s", test_llm.linear_layer_names)
 
 def _create_test_trainer():
@@ -67,4 +68,3 @@ def test_trainer_model_named_modules():
             ), f"Module {name} in test_trainer is not in torch.float32 dtype."
 
     logger.info("All modules are converted to torch.float32 dtype.")
-

@@ -19,11 +19,13 @@ class DatasetManager:
         dataset_path: str,
         data_format: Literal["default", "chat_openai"],
         tokenizer: Optional[Tokenizer] = None,
+        use_cache: bool = False
     ) -> None:
         self.dataset_path = dataset_path
         self.format = data_format
         self.extension = dataset_path.split(".")[-1]
         self.tokenizer = tokenizer
+        self.use_cache = use_cache
         self.model_name = tokenizer.repo_id if tokenizer else None
 
         if not self.tokenizer:
@@ -38,7 +40,7 @@ class DatasetManager:
     def get_dataset(self) -> Dataset:
         """Loads and processes the dataset to add text fields."""
         init_dataset = self._load_dataset()
-        dataset = init_dataset.map(self._create_text_field, load_from_cache_file=False)
+        dataset = init_dataset.map(self._create_text_field, load_from_cache_file=self.use_cache)
         return dataset
 
     def _create_text_field(self, example: Dict) -> Dict[str, str]:
@@ -56,23 +58,10 @@ class DatasetManager:
     def _select_formatter(self, model_name: str) -> PromptFormatter:
         model_registry = ModelRegistry()
 
-        if model_name in model_registry.get_model(
-            family="llama",
-            version='llama3'
-        ) or model_name in model_registry.get_model(
-            family="elyza",
-            version='llama3'
-        ):
+        if model_registry.is_llama3(model_name):
             return PromptLlama3Formatter(data_type=self.format, tokenizer=self.tokenizer)
 
-        elif model_name in model_registry.get_model(
-            family="elyza",
-            version='llama2'
-        ) or model_name in model_registry.get_model(
-            family="elyza",
-            version='llama2',
-            variant='instruct'
-        ):
+        elif model_registry.is_llama2(model_name):
             return PromptLlama2Formatter(data_type=self.format, tokenizer=self.tokenizer)
 
         else:

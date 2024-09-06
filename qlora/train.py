@@ -36,6 +36,7 @@ class ModelTrainer:
             new_vocab_size = len(self.tokenizer.hf_tokenizer)
 
             if new_vocab_size != current_vocab_size:
+                logger.info("Model configuration has a different vocab size than tokenizer.")
                 self.llm.model.resize_token_embeddings(new_vocab_size)
             else:
                 logger.info("Tokenizer and model have the same vocab size.")
@@ -85,7 +86,7 @@ class ModelTrainer:
             peft_config=self.lora_config,
             args=self.training_args,
             dataset_text_field="text",
-            max_seq_length=512,
+            max_seq_length=None,
         )
 
     def _convert_normalization_layer_to_float32(self, trainer: SFTTrainer) -> None:

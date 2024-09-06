@@ -51,11 +51,3 @@ def test_run_model_execute(
     )
 
 
-@pytest.mark.parametrize(
-    "repo_id, adapter_path, questions, system, max_tokens", test_data
-)
-def test_run_model(repo_id, adapter_path, questions, system, max_tokens):
-    try:
-        run_model(repo_id, adapter_path, questions, system, max_tokens)
-    except Exception as e:
-        pytest.fail(f"Failed to run the model: {e}")

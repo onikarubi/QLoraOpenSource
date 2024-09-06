@@ -102,3 +102,25 @@ class ModelRegistry:
             Dict[str, Dict]: A dictionary containing all model configurations.
         """
         return self.models
+
+    def is_llama2(self, model_id: str) -> bool:
+        """Check if the model is a Llama2 model.
+
+        Args:
+            model_id (str): The model identifier to check.
+
+        Returns:
+            bool: True if the model is a Llama2 model, False otherwise.
+        """
+        return model_id in self.get_model(family="elyza", version="llama2", variant="default") or model_id in self.get_model(family="elyza", version="llama2", variant="instruct")
+
+    def is_llama3(self, model_id: str) -> bool:
+        """Check if the model is a Llama3 model.
+
+        Args:
+            model_id (str): The model identifier to check.
+
+        Returns:
+            bool: True if the model is a Llama3 model, False otherwise.
+        """
+        return model_id in self.get_model(family="elyza", version="llama3", variant="default") or model_id in self.get_model(family="llama", version="llama3", variant="default")
