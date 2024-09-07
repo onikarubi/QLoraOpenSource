@@ -48,6 +48,12 @@ class ModelRunner:
         logger.debug("Starting model inference...")
         responses = []
 
+        def _decode_token(token_ids: list[int]):
+            return self.tokenizer.hf_tokenizer.decode(
+                token_ids,
+                skip_special_tokens=True,
+            )
+
         for question in questions:
             try:
                 prompt = self._create_prompt(system, question)
@@ -66,8 +72,54 @@ class ModelRunner:
                         eos_token_id=self.tokenizer.hf_tokenizer.eos_token_id,
                     )
 
+                print('--------------------------------')
+                print('output_ids: \n')
+                output_ids_to_list: list[list[int]] = output_ids.tolist()
+                logger.debug("output_ids_to_list = %s", output_ids_to_list)
+                print('--------------------------------')
+                print()
+                print('--------------------------------')
+                print('output_ids[0]: \n')
+                output_ids_to_list_0: list[list[int]] = output_ids.tolist()[0]
+                logger.debug("output_ids_to_list[0] = %s", output_ids_to_list[0])
+                logger.debug("output_ids_to_list[0]:decode = %s", _decode_token(output_ids_to_list_0))
+                print('--------------------------------')
+                print()
+                print('--------------------------------')
+                print('model_inputs["input_ids"]: \n')
+                model_input_ids = model_inputs["input_ids"]
+                logger.debug("model_input_ids = %s", model_input_ids)
+                print('--------------------------------')
+                print()
+                print('--------------------------------')
+                print('input sequence length: \n')
+                input_sequence_length = model_inputs["input_ids"].size(1)
+                logger.debug("model_inputs_size = %s", input_sequence_length)
+                print('--------------------------------')
+                print()
+                print('--------------------------------')
+                print('input batch size: \n')
+                input_batch_size = model_inputs["input_ids"].size(0)
+                logger.debug("batch size = %s", input_batch_size)
+                print("--------------------------------")
+                print()
+                print('--------------------------------')
+                print('input_ids: \n')
+                input_ids = model_inputs["input_ids"].tolist()[0]
+                logger.debug("input_ids = %s", input_ids)
+                logger.debug("input_ids:decode = %s", _decode_token(input_ids))
+                print('--------------------------------')
+                print()
+                print('--------------------------------')
+                print('token_ids: \n')
+                token_ids = output_ids_to_list[0][input_sequence_length:]
+                logger.debug("token_ids = %s", token_ids)
+                logger.debug("token_ids:decode = %s", _decode_token(token_ids))
+                print('--------------------------------')
+                print()
+
                 output = self.tokenizer.hf_tokenizer.decode(
-                    output_ids.tolist()[0][model_inputs["input_ids"].size(1) :],
+                    token_ids,
                     skip_special_tokens=True,
                 )
                 responses.append(output)
