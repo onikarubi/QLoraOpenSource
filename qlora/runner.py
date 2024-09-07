@@ -48,6 +48,12 @@ class ModelRunner:
         logger.debug("Starting model inference...")
         responses = []
 
+        def _decode_token(token_ids: list[int]):
+            return self.tokenizer.hf_tokenizer.decode(
+                token_ids,
+                skip_special_tokens=True,
+            )
+
         for question in questions:
             try:
                 prompt = self._create_prompt(system, question)
@@ -66,10 +72,11 @@ class ModelRunner:
                         eos_token_id=self.tokenizer.hf_tokenizer.eos_token_id,
                     )
 
-                output = self.tokenizer.hf_tokenizer.decode(
-                    output_ids.tolist()[0][model_inputs["input_ids"].size(1) :],
-                    skip_special_tokens=True,
-                )
+                output_ids_to_list = output_ids.tolist()
+                input_sequence_length = model_inputs["input_ids"].size(1)
+                token_ids = output_ids_to_list[0][input_sequence_length:]
+
+                output = _decode_token(token_ids)
                 responses.append(output)
                 logger.info("Question: %s", question)
                 logger.info("Answer: %s", output)
